@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SubLinkFixer PRO 🎯</title>
 <style>
+  #copySeriesNameBtn {
+  background-color: #28a745;
+  color: white;
+  border-radius: 12px;
+  padding: 16px 30px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+#copySeriesNameBtn:hover {
+  background-color: #218838;
+}
+
   :root {
     --bg-light: #f9f9f9;
     --text-light: #222;
@@ -130,11 +144,21 @@
 <button class="info" onclick="copyAllLinks()">📋 کپی همه لینک‌ها</button>
 <div class="output" id="linkOutput"></div>
 
+<!-- بالای بخش زینویس  -->
+<div style="margin-bottom: 10px; display: flex; gap: 12px;">
+  <button class="info" onclick="searchSubtitleSite('subsource')">ساب سورس🌐</button>
+  <button class="info" onclick="searchSubtitleSite('subkade')">ساب کده📑</button>
+  <span id="seriesNameOutput"></span>
+<button id="copySeriesNameBtn" style="display:none;">کپی اسم فیلم</button>
+
+</div>
+
+
 <h2>۲️⃣ انتخاب فایل زیپ زیرنویس</h2>
 <input type="file" id="zipFile" accept=".zip" />
 <button class="success" onclick="processZip()">پیش‌نمایش تغییر نام</button>
 <div class="output" id="previewOutput"></div>
-<button id="downloadBtn" class="danger" style="display:none;" onclick="downloadZip()">دانلود فایل جدید</button>
+<button id="downloadBtn" class="danger" style="display:none;" onclick="downloadZip()">دانلود فایل جدید📥</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
@@ -172,6 +196,73 @@ function processLinks() {
     alert("هیچ لینک معتبری با فرمت و قسمت پیدا نشد.");
   }
 }
+// زیرنویس ساب کده
+
+let seriesName = "";
+let seasonNumber = "";
+
+function processLinks() {
+  const text = document.getElementById("inputText").value;
+  const regex = /(https?:\/\/[^\s]+)/g;
+  allLinks = text.match(regex) || [];
+  episodeList = [];
+  seriesName = "";
+  seasonNumber = "";
+
+  let outputHTML = `<table><tr><th>لینک</th><th>نام فیلم</th><th>قسمت</th></tr>`;
+
+  for (const link of allLinks) {
+    const regex = /(.*\/)([^\/]+)\.(mkv|mp4|avi|mov|wmv|flv|webm|ts|m4v)/i;
+    const match = link.match(regex);
+    if (!match) continue;
+    const filename = match[2];
+    const epRegex = /(S(\d{1,2})E\d{1,2})/i;
+    const epMatch = filename.match(epRegex);
+    const episode = epMatch ? epMatch[1].toUpperCase() : null;
+
+    if (episode) {
+      episodeList.push({ episode, name: filename + "." + match[3] });
+      if (!seriesName) {
+        // استخراج نام سریال از اسم فایل تا قبل از SxxExx
+        seriesName = filename.split(epMatch[1])[0].replace(/\.$/, "").replace(/\./g, " ");
+        seasonNumber = epMatch[2];
+        document.getElementById("seriesNameOutput").innerText = seriesName;
+const copyBtn = document.getElementById("copySeriesNameBtn");
+copyBtn.style.display = "inline-block";
+copyBtn.onclick = () => {
+  navigator.clipboard.writeText(seriesName).then(() => alert("کپی شد"));
+};
+
+      }
+      outputHTML += `<tr><td><a href="${link}" target="_blank">${link}</a></td><td>${filename}.${match[3]}</td><td>${episode}</td></tr>`;
+    }
+  }
+
+
+
+  outputHTML += "</table>";
+  document.getElementById("linkOutput").innerHTML = outputHTML;
+
+  if (episodeList.length === 0) {
+    alert("هیچ لینک معتبری با فرمت و قسمت پیدا نشد.");
+  }
+}
+
+function searchSubtitleSite(site) {
+  if (!seriesName) {
+    alert("ابتدا لینک‌ها را پردازش کنید.");
+    return;
+  }
+  let url = "";
+  if (site === "subsource") {
+    url = `https://subsource.net/subtitles/`;
+  } else if (site === "subkade") {
+    url = `https://subkade.ir/?s=${encodeURIComponent(seriesName)}`;
+  }
+  window.open(url, "_blank");
+}
+
+
 
 function copyAllLinks() {
   if (allLinks.length === 0) {

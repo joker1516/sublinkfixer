@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SubLinkFixer PRO 🎯</title>
+<style>
+  #copySeriesNameBtn {
+  background-color: #28a745;
+  color: white;
+  border-radius: 12px;
+  padding: 16px 30px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+#copySeriesNameBtn:hover {
+  background-color: #218838;
+}
+
+  :root {
+    --bg-light: #f9f9f9;
+    --text-light: #222;
+    --card-light: #fff;
+    --border-light: #ddd;
+    --bg-dark: #121212;
+    --text-dark: #f1f1f1;
+    --card-dark: #1f1f1f;
+    --border-dark: #333;
+    --primary: #007bff;
+    --success: #28a745;
+    --danger: #dc3545;
+    --info: #17a2b8;
+  }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 20px;
+    direction: rtl;
+    transition: background 0.5s, color 0.5s;
+  }
+  body.light { background: var(--bg-light); color: var(--text-light); }
+  body.dark  { background: var(--bg-dark);  color: var(--text-dark);  }
+
+  h1 { margin-bottom: 10px; animation: fadeIn 1s ease; }
+
+  textarea, input[type="file"] {
+    width: 100%;
+    margin-top: 10px;
+    font-size: 16px;
+    padding: 16px;
+    border-radius: 10px;
+    box-sizing: border-box;
+    border: 1px solid;
+    transition: 0.3s;
+  }
+  body.light textarea, body.light input[type="file"] { border-color: var(--border-light); background: var(--card-light); color: var(--text-light); }
+  body.dark textarea, body.dark input[type="file"] { border-color: var(--border-dark); background: var(--card-dark); color: var(--text-dark); }
+
+  button {
+    margin-top: 12px;
+    padding: 16px 30px;
+    font-size: 18px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 100%;
+  }
+  .primary { background: var(--primary); color: #fff; }
+  .success { background: var(--success); color: #fff; }
+  .danger  { background: var(--danger); color: #fff; }
+  .info    { background: var(--info); color: #fff; }
+  button:hover { transform: scale(1.05); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
+
+  .output {
+    background: var(--card-light);
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    transition: 0.3s;
+    animation: fadeIn 0.8s ease;
+    overflow-x: auto;
+  }
+  body.dark .output {
+    background: var(--card-dark);
+    box-shadow: 0 0 15px rgba(255,255,255,0.05);
+  }
+  table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+    animation: slideIn 0.7s ease;
+  }
+  th, td {
+    padding: 14px 10px;
+    text-align: center;
+    font-size: 14px;
+    border: 1px solid;
+  }
+  body.light th, body.light td { border-color: var(--border-light); }
+  body.dark th, body.dark td { border-color: var(--border-dark); }
+  th { background: var(--primary); color: #fff; }
+  .matched { background: #d4edda; color: #155724; }
+  .unmatched { background: #f8d7da; color: #721c24; }
+  body.dark .matched { background: rgba(40, 167, 69, 0.2); color: #00ff99; }
+  body.dark .unmatched { background: rgba(220, 53, 69, 0.2); color: #ff6666; }
+
+  .theme-toggle {
+    float: left;
+    cursor: pointer;
+    padding: 10px 20px;
+    background: linear-gradient(45deg, #ff4081, #7c4dff);
+    color: #fff;
+    border-radius: 25px;
+    font-weight: bold;
+    user-select: none;
+    transition: 0.4s ease;
+  }
+  .theme-toggle:hover { transform: scale(1.1) rotate(-3deg); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* ریسپانسیو موبایل */
+  @media screen and (max-width: 600px) {
+    button { font-size: 16px; padding: 14px 20px; }
+    textarea { font-size: 14px; padding: 14px; }
+    th, td { font-size: 11px; padding: 8px 8px; }
+    .theme-toggle { padding: 8px 15px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+ <div class="theme-toggle" onclick="toggleTheme()">🌓 تغییر تم</div>
+<h1>🎯 SubLinkFixer نسخه PRO</h1>
+
+<h2>۱️⃣ وارد کردن لینک‌ها</h2>
+<textarea id="inputText" placeholder="لینک‌های قسمت‌ها را وارد کنید..."></textarea>
+<button class="primary" onclick="processLinks()">پردازش لینک‌ها</button>
+<button class="info" onclick="copyAllLinks()">📋 کپی همه لینک‌ها</button>
+<div class="output" id="linkOutput"></div>
+
+<!-- بالای بخش زینویس  -->
+<div style="margin-bottom: 10px; display: flex; gap: 12px;">
+  <button class="info" onclick="searchSubtitleSite('subsource')">ساب سورس🌐</button>
+  <button class="info" onclick="searchSubtitleSite('subkade')">ساب کده📑</button>
+  <span id="seriesNameOutput"></span>
+<button id="copySeriesNameBtn" style="display:none;">کپی اسم فیلم</button>
+
+</div>
+
+
+<h2>۲️⃣ انتخاب فایل زیپ زیرنویس</h2>
+<input type="file" id="zipFile" accept=".zip" />
+<button class="success" onclick="processZip()">پیش‌نمایش تغییر نام</button>
+<div class="output" id="previewOutput"></div>
+<button id="downloadBtn" class="danger" style="display:none;" onclick="downloadZip()">دانلود فایل جدید📥</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+let allLinks = [];
+let episodeList = [];
+let renamedFiles = [];
+let zipObject = null;
+function processLinks() {
+  const text = document.getElementById("inputText").value;
+  const regex = /(https?:\/\/[^\s]+)/g;
+  allLinks = text.match(regex) || [];
+  episodeList = [];
+
+  let outputHTML = `<table><tr><th>لینک</th><th>نام فیلم</th><th>قسمت</th></tr>`;
+
+  for (const link of allLinks) {
+    const regex = /(.*\/)([^\/]+)\.(mkv|mp4|avi|mov|wmv|flv|webm|ts|m4v)/i;
+    const match = link.match(regex);
+    if (!match) continue;
+    const filename = match[2];
+    const epRegex = /(S\d{1,2}E\d{1,2})/i;
+    const epMatch = filename.match(epRegex);
+    const episode = epMatch ? epMatch[1].toUpperCase() : null;
+
+    if (episode) {
+      episodeList.push({ episode, name: filename + "." + match[3] });
+      outputHTML += `<tr><td><a href="${link}" target="_blank">${link}</a></td><td>${filename}.${match[3]}</td><td>${episode}</td></tr>`;
+    }
+  }
+
+  outputHTML += "</table>";
+  document.getElementById("linkOutput").innerHTML = outputHTML;
+
+  if (episodeList.length === 0) {
+    alert("هیچ لینک معتبری با فرمت و قسمت پیدا نشد.");
+  }
+}
+// زیرنویس ساب کده
+
+let seriesName = "";
+let seasonNumber = "";
+
+function processLinks() {
+  const text = document.getElementById("inputText").value;
+  const regex = /(https?:\/\/[^\s]+)/g;
+  allLinks = text.match(regex) || [];
+  episodeList = [];
+  seriesName = "";
+  seasonNumber = "";
+
+  let outputHTML = `<table><tr><th>لینک</th><th>نام فیلم</th><th>قسمت</th></tr>`;
+
+  for (const link of allLinks) {
+    const regex = /(.*\/)([^\/]+)\.(mkv|mp4|avi|mov|wmv|flv|webm|ts|m4v)/i;
+    const match = link.match(regex);
+    if (!match) continue;
+    const filename = match[2];
+    const epRegex = /(S(\d{1,2})E\d{1,2})/i;
+    const epMatch = filename.match(epRegex);
+    const episode = epMatch ? epMatch[1].toUpperCase() : null;
+
+    if (episode) {
+      episodeList.push({ episode, name: filename + "." + match[3] });
+      if (!seriesName) {
+        // استخراج نام سریال از اسم فایل تا قبل از SxxExx
+        seriesName = filename.split(epMatch[1])[0].replace(/\.$/, "").replace(/\./g, " ");
+        seasonNumber = epMatch[2];
+        document.getElementById("seriesNameOutput").innerText = seriesName;
+const copyBtn = document.getElementById("copySeriesNameBtn");
+copyBtn.style.display = "inline-block";
+copyBtn.onclick = () => {
+  navigator.clipboard.writeText(seriesName).then(() => alert("کپی شد"));
+};
+
+      }
+      outputHTML += `<tr><td><a href="${link}" target="_blank">${link}</a></td><td>${filename}.${match[3]}</td><td>${episode}</td></tr>`;
+    }
+  }
+
+
+
+  outputHTML += "</table>";
+  document.getElementById("linkOutput").innerHTML = outputHTML;
+
+  if (episodeList.length === 0) {
+    alert("هیچ لینک معتبری با فرمت و قسمت پیدا نشد.");
+  }
+}
+
+function searchSubtitleSite(site) {
+  if (!seriesName) {
+    alert("ابتدا لینک‌ها را پردازش کنید.");
+    return;
+  }
+  let url = "";
+  if (site === "subsource") {
+    url = `https://subsource.net/subtitles/`;
+  } else if (site === "subkade") {
+    url = `https://subkade.ir/?s=${encodeURIComponent(seriesName)}`;
+  }
+  window.open(url, "_blank");
+}
+
+
+
+function copyAllLinks() {
+  if (allLinks.length === 0) {
+    alert("لینکی برای کپی کردن وجود ندارد.");
+    return;
+  }
+  const el = document.createElement('textarea');
+  el.value = allLinks.join('\n');
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  alert("تمام لینک‌ها کپی شد!");
+}
+
+async function processZip() {
+  if (episodeList.length === 0) {
+    alert("لطفاً ابتدا لینک‌ها را پردازش کنید.");
+    return;
+  }
+  const fileInput = document.getElementById("zipFile");
+  if (!fileInput.files.length) {
+    alert("لطفاً فایل زیپ زیرنویس را انتخاب کنید.");
+    return;
+  }
+  const zipFile = fileInput.files[0];
+  zipObject = await JSZip.loadAsync(zipFile);
+  renamedFiles = [];
+
+  let previewHTML = `<table><tr><th>نام فعلی</th><th>نام جدید</th><th>وضعیت</th></tr>`;
+
+  let index = 0;
+  for (const relativePath in zipObject.files) {
+    const file = zipObject.files[relativePath];
+    if (!file.dir) {
+      const originalName = relativePath.split('/').pop();
+
+      if (index >= episodeList.length) {
+        previewHTML += `<tr class="unmatched"><td>${originalName}</td><td>نام قسمت یافت نشد</td><td>❌ پیدا نشد</td></tr>`;
+        renamedFiles.push({ file, originalName, newName: "Unmatched_" + originalName });
+        continue;
+      }
+
+      const episodeObj = episodeList[index];
+      const extMatch = originalName.match(/\.(srt|sub|ass|txt)$/i);
+      const ext = extMatch ? extMatch[1].toLowerCase() : "srt";
+      const newName = episodeObj.name.replace(/\.[^/.]+$/, "") + "." + ext;
+
+      previewHTML += `<tr class="matched"><td>${originalName}</td><td>${newName}</td><td>✅ مطابقت یافت</td></tr>`;
+      renamedFiles.push({ file, originalName, newName });
+      index++;
+    }
+  }
+  previewHTML += "</table>";
+  document.getElementById("previewOutput").innerHTML = previewHTML;
+  document.getElementById("downloadBtn").style.display = "inline-block";
+}
+
+async function downloadZip() {
+  if (!zipObject || renamedFiles.length === 0) {
+    alert("ابتدا زیرنویس‌ها را پردازش کنید.");
+    return;
+  }
+  const newZip = new JSZip();
+
+  for (const item of renamedFiles) {
+    const content = await item.file.async("arraybuffer");
+    newZip.file(item.newName, content);
+  }
+
+  const content = await newZip.generateAsync({ type: "blob" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(content);
+  a.download = "RenamedSubtitles.zip";
+  a.click();
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  document.body.classList.toggle("light");
+
+  if (document.body.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+  } else {
+    localStorage.setItem("theme", "light");
+  }
+}
+
+window.onload = function() {
+  const savedTheme = localStorage.getItem("theme") || "light";
+  document.body.classList.add(savedTheme);
+};
+</script>
+</body>
+</html>

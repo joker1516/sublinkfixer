@@ -119,6 +119,9 @@
       .theme-toggle { padding: 8px 15px; font-size: 14px; }
       
       #customPattern {
+  direction: ltr;
+  unicode-bidi: embed;
+
   background-color: #222222;    /* پس‌زمینه صورتی روشن */
   color: #222;                  /* رنگ متن */
   font-size: 18px;              /* اندازه فونت */
@@ -189,6 +192,7 @@ body.dark #customPattern {
     <label for="zipFile" class="custom-upload">📂 انتخاب فایل زیرنویس</label>
 <input type="file" id="zipFile" accept=".zip" style="display: none;" onchange="showPreviewButton()" />
 <button id="previewBtn" class="success" style="display: none;" onclick="processZip()">پیش‌نمایش تغییر نام</button>
+<div class="output" id="previewOutput"></div>
   <button id="downloadBtn" class="danger" style="display:none;" onclick="downloadZip()">دانلود فایل جدید📥</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -269,53 +273,69 @@ body.dark #customPattern {
     }
 
     async function processZip() {
-      const customPattern = document.getElementById("customPattern").value.trim();
-      const useCustomPattern = customPattern.includes("*");
+  const customPattern = document.getElementById("customPattern").value.trim();
+  const useCustomPattern = customPattern.includes("*");
+  const fileInput = document.getElementById("zipFile");
 
-      if (episodeList.length === 0) {
-        alert("لطفاً ابتدا لینک‌ها را پردازش کنید.");
-        return;
+  if (!fileInput.files.length) {
+    alert("لطفاً فایل زیپ زیرنویس را انتخاب کنید.");
+    return;
+  }
+
+  const zipFile = fileInput.files[0];
+  zipObject = await JSZip.loadAsync(zipFile);
+  renamedFiles = [];
+
+  // اگر کاربر فقط customPattern داده و لینک وارد نکرده
+  if (useCustomPattern && episodeList.length === 0) {
+    const fileNames = Object.keys(zipObject.files).filter(f => !zipObject.files[f].dir);
+    episodeList = fileNames.map((_, i) => {
+      const epNum = (i + 1).toString().padStart(2, '0');
+      const name = customPattern.replace("*", epNum) + ".mkv"; // فقط یه اسم ساختگی برای تطبیق
+      return { episode: `E${epNum}`, name };
+    });
+  }
+
+  if (episodeList.length === 0) {
+    alert("لطفاً ابتدا لینک‌ها را پردازش کنید یا الگوی دستی معتبر وارد کنید.");
+    return;
+  }
+
+  let previewHTML = `<table><tr><th>نام فعلی</th><th>نام جدید</th><th>وضعیت</th></tr>`;
+  let index = 0;
+
+  for (const relativePath in zipObject.files) {
+    const file = zipObject.files[relativePath];
+    if (!file.dir) {
+      const originalName = relativePath.split('/').pop();
+
+      if (index >= episodeList.length) {
+        previewHTML += `<tr class="unmatched"><td>${originalName}</td><td>نام قسمت یافت نشد</td><td>❌ پیدا نشد</td></tr>`;
+        renamedFiles.push({ file, originalName, newName: "Unmatched_" + originalName });
+        continue;
       }
-      const fileInput = document.getElementById("zipFile");
-      if (!fileInput.files.length) {
-        alert("لطفاً فایل زیپ زیرنویس را انتخاب کنید.");
-        return;
-      }
-      const zipFile = fileInput.files[0];
-      zipObject = await JSZip.loadAsync(zipFile);
-      renamedFiles = [];
 
-      let previewHTML = `<table><tr><th>نام فعلی</th><th>نام جدید</th><th>وضعیت</th></tr>`;
-      let index = 0;
+      const episodeObj = episodeList[index];
+      const extMatch = originalName.match(/\.(srt|sub|ass|txt)$/i);
+      const ext = extMatch ? extMatch[1].toLowerCase() : "srt";
+      let baseName = episodeObj.name.replace(/\.[^/.]+$/, "");
 
-      for (const relativePath in zipObject.files) {
-        const file = zipObject.files[relativePath];
-        if (!file.dir) {
-          const originalName = relativePath.split('/').pop();
-          if (index >= episodeList.length) {
-            previewHTML += `<tr class="unmatched"><td>${originalName}</td><td>نام قسمت یافت نشد</td><td>❌ پیدا نشد</td></tr>`;
-            renamedFiles.push({ file, originalName, newName: "Unmatched_" + originalName });
-            continue;
-          }
-          const episodeObj = episodeList[index];
-          const extMatch = originalName.match(/\.(srt|sub|ass|txt)$/i);
-          const ext = extMatch ? extMatch[1].toLowerCase() : "srt";
-          let baseName = episodeObj.name.replace(/\.[^/.]+$/, "");
-          if (useCustomPattern) {
-            const epNum = (index + 1).toString().padStart(2, '0');
-            baseName = customPattern.replace("*", epNum);
-          }
-          const newName = baseName + "." + ext;
-          previewHTML += `<tr class="matched"><td>${originalName}</td><td>${newName}</td><td>✅ مطابقت یافت</td></tr>`;
-          renamedFiles.push({ file, originalName, newName });
-          index++;
-        }
+      if (useCustomPattern) {
+        const epNum = (index + 1).toString().padStart(2, '0');
+        baseName = customPattern.replace("*", epNum);
       }
 
-      previewHTML += "</table>";
-      document.getElementById("previewOutput").innerHTML = previewHTML;
-      document.getElementById("downloadBtn").style.display = "inline-block";
+      const newName = baseName + "." + ext;
+      previewHTML += `<tr class="matched"><td>${originalName}</td><td>${newName}</td><td>✅ مطابقت یافت</td></tr>`;
+      renamedFiles.push({ file, originalName, newName });
+      index++;
     }
+  }
+
+  previewHTML += "</table>";
+  document.getElementById("previewOutput").innerHTML = previewHTML;
+  document.getElementById("downloadBtn").style.display = "inline-block";
+}
 
     async function downloadZip() {
       if (!zipObject || renamedFiles.length === 0) {

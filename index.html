@@ -126,6 +126,7 @@
   border: 0.5px solid #444444;    /* رنگ و ضخامت خط دور */
   border-radius: 12px;          /* گوشه‌های گرد */
   margin-bottom: 15px;          /* فاصله با پایین */
+  
 }
 .custom-upload {
 	display: inline-flex;            /* استفاده از فلکس‌باکس */
@@ -149,7 +150,19 @@
   background-color: #e57c00;
   transform: scale(1.05);
 }
-    }
+
+    body.light #customPattern {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ccc !important;
+}
+
+body.dark #customPattern {
+  background-color: #1f1f1f !important;
+  color: #f1f1f1 !important;
+  border: 1px solid #444 !important;
+}
+    
   </style>
 </head>
 <body>

@@ -219,7 +219,7 @@ body.dark #customPattern {
         const match = link.match(regex);
         if (!match) continue;
         const filename = match[2];
-        const epRegex = /(S(\d{1,2})E\d{1,2})/i;
+        const epRegex = /(S(\d{1,2})\.?E(\d{1,2}))/i;
         const epMatch = filename.match(epRegex);
         const episode = epMatch ? epMatch[1].toUpperCase() : null;
 
@@ -272,9 +272,8 @@ body.dark #customPattern {
       alert("تمام لینک‌ها کپی شد!");
     }
 
-    async function processZip() {
+async function processZip() {
   const customPattern = document.getElementById("customPattern").value.trim();
-  const useCustomPattern = customPattern.includes("*");
   const fileInput = document.getElementById("zipFile");
 
   if (!fileInput.files.length) {
@@ -286,17 +285,21 @@ body.dark #customPattern {
   zipObject = await JSZip.loadAsync(zipFile);
   renamedFiles = [];
 
-  // اگر کاربر فقط customPattern داده و لینک وارد نکرده
-  if (useCustomPattern && episodeList.length === 0) {
+  // اگر فقط customPattern وارد شده باشه (و لینک‌ها نباشه)
+  if (customPattern && episodeList.length === 0) {
+    const epRegex = /E(\d{1,3})/i;
+    const epMatch = customPattern.match(epRegex);
+    const startEpisode = epMatch ? parseInt(epMatch[1], 10) : 1;
+
     const fileNames = Object.keys(zipObject.files).filter(f => !zipObject.files[f].dir);
     episodeList = fileNames.map((_, i) => {
-      const epNum = (i + 1).toString().padStart(2, '0');
-      const name = customPattern.replace("*", epNum) + ".mkv"; // فقط یه اسم ساختگی برای تطبیق
-      return { episode: `E${epNum}`, name };
+      const epNum = (startEpisode + i).toString().padStart(2, '0');
+      const fakeName = customPattern.replace(epRegex, `E${epNum}`) + ".mkv";
+      return { episode: `E${epNum}`, name: fakeName };
     });
   }
 
-  if (episodeList.length === 0) {
+  if (!customPattern && episodeList.length === 0) {
     alert("لطفاً ابتدا لینک‌ها را پردازش کنید یا الگوی دستی معتبر وارد کنید.");
     return;
   }
@@ -318,14 +321,18 @@ body.dark #customPattern {
       const episodeObj = episodeList[index];
       const extMatch = originalName.match(/\.(srt|sub|ass|txt)$/i);
       const ext = extMatch ? extMatch[1].toLowerCase() : "srt";
-      let baseName = episodeObj.name.replace(/\.[^/.]+$/, "");
 
-      if (useCustomPattern) {
-        const epNum = (index + 1).toString().padStart(2, '0');
-        baseName = customPattern.replace("*", epNum);
-      }
+      const epNum = episodeObj.episode.replace("E", "");
 
-      const newName = baseName + "." + ext;
+let baseName = "";
+if (customPattern) {
+  baseName = customPattern.replace(/E\d{1,3}/i, `E${epNum}`);
+} else {
+  baseName = episodeObj.name.replace(/\.[^/.]+$/, ""); // حذف پسوند از اسم ویدیویی لینک
+}
+
+const newName = baseName + "." + ext;
+
       previewHTML += `<tr class="matched"><td>${originalName}</td><td>${newName}</td><td>✅ مطابقت یافت</td></tr>`;
       renamedFiles.push({ file, originalName, newName });
       index++;
